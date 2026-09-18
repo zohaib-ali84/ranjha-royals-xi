@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ranjha Royals XI | Scoreboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pitch: #1B4B36; --pitch-dark: #123125; --gold: #D9A441;
+    --ink: #182018; --paper: #F6F3EA; --card: #FFFFFF; --line: #E4DFD0; --muted: #6B7268;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --paper:#12160F; --card:#1C221A; --line:#303826; --ink:#EDEDE5; --muted:#9AA396; }
+  }
+  :root[data-theme="dark"] { --paper:#12160F; --card:#1C221A; --line:#303826; --ink:#EDEDE5; --muted:#9AA396; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; }
+  .scorehead { font-family:'Oswald','Arial Narrow',sans-serif; }
+  header.hero { background:linear-gradient(160deg,var(--pitch) 0%, var(--pitch-dark) 100%); color:#F6F3EA; padding:28px 20px 22px; border-bottom:4px solid var(--gold); }
+  .team-name { font-family:'Oswald'; font-weight:700; font-size:1.5rem; margin:0; }
+  .hero-sub { color:#C9D9CC; font-size:0.85rem; margin-top:2px; }
+  .next-match-card { margin-top:18px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:14px 16px; }
+  .next-match-label { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); font-weight:600; }
+  .next-match-main { font-family:'Oswald'; font-size:1.3rem; margin-top:4px; }
+  .next-match-meta { font-size:0.85rem; color:#C9D9CC; margin-top:2px; }
+  nav.tabs { display:flex; gap:4px; padding:10px 16px; background:var(--paper); position:sticky; top:0; border-bottom:1px solid var(--line); overflow-x:auto; }
+  nav.tabs button { border:none; background:transparent; padding:9px 14px; border-radius:20px; font-weight:600; font-size:0.88rem; color:var(--muted); cursor:pointer; white-space:nowrap; }
+  nav.tabs button.active { background:var(--pitch); color:#fff; }
+  main { max-width:640px; margin:0 auto; padding:16px; padding-bottom:40px; }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .card h3 { margin:0 0 10px; font-family:'Oswald'; font-weight:600; font-size:1.05rem; }
+  .empty { color:var(--muted); font-size:0.9rem; padding:10px 0; }
+  .leader-row { display:flex; gap:10px; margin-bottom:10px; }
+  .leader-box { flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 12px; text-align:center; }
+  .leader-num { font-family:'Oswald'; font-weight:700; font-size:1.6rem; color:var(--pitch); }
+  :root[data-theme="dark"] .leader-num { color:var(--gold); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .leader-num { color:var(--gold); } }
+  .leader-label { font-size:0.7rem; color:var(--muted); text-transform:uppercase; margin-top:2px; }
+  .leader-name { font-size:0.82rem; font-weight:600; margin-top:4px; }
+  .match-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); gap:10px; }
+  .match-row:last-child { border-bottom:none; }
+  .match-opp { font-weight:600; }
+  .match-meta { font-size:0.8rem; color:var(--muted); }
+  .badge { font-size:0.7rem; padding:3px 9px; border-radius:20px; font-weight:600; white-space:nowrap; }
+  .badge.upcoming { background:#EFE3C4; color:#7A5A17; }
+  .badge.done { background:#DCEBE0; color:#1B4B36; }
+  :root[data-theme="dark"] .badge.upcoming { background:#3A2F13; color:#E8C878; }
+  :root[data-theme="dark"] .badge.done { background:#1E3327; color:#8FD3A6; }
+  table.stats { width:100%; border-collapse:collapse; font-size:0.88rem; }
+  table.stats th { text-align:left; font-size:0.72rem; text-transform:uppercase; color:var(--muted); padding:6px; border-bottom:1px solid var(--line); }
+  table.stats td { padding:9px 6px; border-bottom:1px solid var(--line); }
+  table.stats td.num, table.stats th.num { text-align:right; }
+  table.stats tr:last-child td { border-bottom:none; }
+  footer.note { text-align:center; font-size:0.75rem; color:var(--muted); padding:20px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="team-name scorehead" id="teamNameEl">Ranjha Royals XI</p>
+  <div class="hero-sub">Lalay Wali &middot; Scoreboard</div>
+  <div class="next-match-card" id="nextMatchCard"></div>
+</header>
+
+<nav class="tabs">
+  <button class="active" data-tab="overview">Overview</button>
+  <button data-tab="schedule">Schedule</button>
+  <button data-tab="players">Players</button>
+</nav>
+
+<main>
+  <section class="tab-panel active" id="tab-overview"></section>
+  <section class="tab-panel" id="tab-schedule"></section>
+  <section class="tab-panel" id="tab-players"></section>
+</main>
+
+<footer class="note">Ranjha Royals XI &middot; Updated by team admin</footer>
+
+<script>
+  // ---- TEAM DATA (edited by admin, re-uploaded to update) ----
+  var STATE = {"teamName":"Ranjha Royals XI","players":[{"id":"idmu6jhnpoob90g2","name":"Junaid Ali"},{"id":"idmu6jie3bq9meyl","name":"Umar sanghera"},{"id":"idmu6jk8c0vq4a0j","name":"Zohaib Ali"},{"id":"idmu6jl2t48aoz1v","name":"Zohair Ali"}],"matches":[{"id":"idmu6jjd1hbn045z","opponent":"Tharpal","date":"2026-09-19","venue":"Tharpal cricket Ground","status":"upcoming","result":"","perf":{}}]};
+
+  function escapeHtml(s) { var d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; }
+  function fmtDate(iso) { if(!iso) return ''; var d=new Date(iso+'T00:00:00'); if(isNaN(d)) return iso; return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+
+  function computeStats() {
+    var map = {};
+    STATE.players.forEach(function(p){ map[p.id] = {id:p.id, name:p.name, matches:0, runs:0, wickets:0, catches:0}; });
+    STATE.matches.forEach(function(m){
+      if (m.status !== 'done' || !m.perf) return;
+      Object.keys(m.perf).forEach(function(pid){
+        if (!map[pid]) return;
+        var perf = m.perf[pid];
+        map[pid].matches += 1;
+        map[pid].runs += Number(perf.r)||0;
+        map[pid].wickets += Number(perf.w)||0;
+        map[pid].catches += Number(perf.c)||0;
+      });
+    });
+    return Object.values(map);
+  }
+
+  function renderNextMatch() {
+    var upcoming = STATE.matches.filter(function(m){return m.status==='upcoming';}).sort(function(a,b){return a.date.localeCompare(b.date);});
+    var el = document.getElementById('nextMatchCard');
+    if (upcoming.length===0) { el.innerHTML='<div class="next-match-label">Next Match</div><div class="next-match-main">No match scheduled</div>'; return; }
+    var m = upcoming[0];
+    el.innerHTML = '<div class="next-match-label">Next Match</div><div class="next-match-main">vs '+escapeHtml(m.opponent)+'</div><div class="next-match-meta">'+fmtDate(m.date)+(m.venue?' &middot; '+escapeHtml(m.venue):'')+'</div>';
+  }
+
+  function renderOverview() {
+    var stats = computeStats();
+    var byRuns = stats.slice().sort(function(a,b){return b.runs-a.runs;});
+    var byWkts = stats.slice().sort(function(a,b){return b.wickets-a.wickets;});
+    var byCatch = stats.slice().sort(function(a,b){return b.catches-a.catches;});
+    function box(label,item,key){
+      if(!item||item[key]===0) return '<div class="leader-box"><div class="leader-num">-</div><div class="leader-label">'+label+'</div></div>';
+      return '<div class="leader-box"><div class="leader-num">'+item[key]+'</div><div class="leader-label">'+label+'</div><div class="leader-name">'+escapeHtml(item.name)+'</div></div>';
+    }
+    var recentDone = STATE.matches.filter(function(m){return m.status==='done';}).sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,3);
+    var html = '<div class="leader-row">'+box('Top Runs',byRuns[0],'runs')+box('Top Wickets',byWkts[0],'wickets')+box('Top Catches',byCatch[0],'catches')+'</div>';
+    html += '<div class="card"><h3>Recent Results</h3>';
+    if (recentDone.length===0) html += '<div class="empty">No completed matches yet.</div>';
+    recentDone.forEach(function(m){
+      html += '<div class="match-row"><div><div class="match-opp">vs '+escapeHtml(m.opponent)+'</div><div class="match-meta">'+fmtDate(m.date)+'</div></div><div class="match-meta">'+escapeHtml(m.result||'')+'</div></div>';
+    });
+    html += '</div>';
+    document.getElementById('tab-overview').innerHTML = html;
+  }
+
+  function renderSchedule() {
+    var upcoming = STATE.matches.filter(function(m){return m.status==='upcoming';}).sort(function(a,b){return a.date.localeCompare(b.date);});
+    var done = STATE.matches.filter(function(m){return m.status==='done';}).sort(function(a,b){return b.date.localeCompare(a.date);});
+    var html = '<div class="card"><h3>Upcoming Matches</h3>';
+    if (upcoming.length===0) html += '<div class="empty">No upcoming matches scheduled.</div>';
+    upcoming.forEach(function(m){
+      html += '<div class="match-row"><div><div class="match-opp">vs '+escapeHtml(m.opponent)+'</div><div class="match-meta">'+fmtDate(m.date)+(m.venue?' &middot; '+escapeHtml(m.venue):'')+'</div></div><span class="badge upcoming">Upcoming</span></div>';
+    });
+    html += '</div><div class="card"><h3>Completed Matches</h3>';
+    if (done.length===0) html += '<div class="empty">No completed matches yet.</div>';
+    done.forEach(function(m){
+      html += '<div class="match-row"><div><div class="match-opp">vs '+escapeHtml(m.opponent)+'</div><div class="match-meta">'+fmtDate(m.date)+(m.venue?' &middot; '+escapeHtml(m.venue):'')+(m.result?' &middot; '+escapeHtml(m.result):'')+'</div></div><span class="badge done">Done</span></div>';
+    });
+    html += '</div>';
+    document.getElementById('tab-schedule').innerHTML = html;
+  }
+
+  function renderPlayers() {
+    var stats = computeStats().sort(function(a,b){return b.runs-a.runs;});
+    var html = '<div class="card"><h3>Player Stats</h3>';
+    if (stats.length===0) { html += '<div class="empty">No players added yet.</div>'; }
+    else {
+      html += '<table class="stats"><thead><tr><th>Player</th><th class="num">M</th><th class="num">Runs</th><th class="num">Wkts</th><th class="num">Ct</th></tr></thead><tbody>';
+      stats.forEach(function(p){ html += '<tr><td>'+escapeHtml(p.name)+'</td><td class="num">'+p.matches+'</td><td class="num">'+p.runs+'</td><td class="num">'+p.wickets+'</td><td class="num">'+p.catches+'</td></tr>'; });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    document.getElementById('tab-players').innerHTML = html;
+  }
+
+  document.querySelectorAll('nav.tabs button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('nav.tabs button').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+      document.getElementById('tab-'+b.dataset.tab).classList.add('active');
+    });
+  });
+
+  document.getElementById('teamNameEl').textContent = STATE.teamName;
+  renderNextMatch(); renderOverview(); renderSchedule(); renderPlayers();
+</script>
+</body>
+</html>
